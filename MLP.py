@@ -4,9 +4,9 @@ import numpy as np
 import theano
 import theano.tensor as T
 from theano import function
-from softMaxClassifier import load_data
+from softMaxClassifier import load_data, softMaxClassifier
 
-class softMaxClassifier(object):
+'''class softMaxClassifier(object):
     def __init__(self, train_x, train_y, n_out, n_in):
         self.rng = np.random
         self.n_in = n_in
@@ -22,7 +22,7 @@ class softMaxClassifier(object):
         self.params = [self.W, self.b]
 
     def negativeLogLikelihood(self, y):
-        return -T.mean(T.log(self.p_y_given_x)[T.arange(0, y.shape[0]), y])
+        return -T.mean(T.log(self.p_y_given_x)[T.arange(0, y.shape[0]), y])'''
 
 class HiddenLayer(object):
     def __init__(self, n_in, n_out, input, W = None, b = None, activation = T.tanh):
@@ -50,120 +50,114 @@ class HiddenLayer(object):
         self.params = [self.W, self.b]
 
 class MLP(object):
-    x = T.matrix('x')
-    y = T.ivector('y')
-    def __init__(self, n_in, n_hidden, n_out,
-                 train_x, train_y,
-                 validation_x, validation_y,
-                 test_x = None, test_y = None,
-                 max_iter_steps = 1000, rate = 0.01):
-        self.train_x, self.train_y, \
-        self.validation_x, self.validation_y, \
-        self.test_x, self.test_y = train_x, train_y, validation_x, validation_y, test_x, test_y
+    def __init__(self, input, n_in, n_hidden, n_out):
 
         self.hiddenLayer = HiddenLayer(n_in = n_in,
                                        n_out = n_hidden,
-                                       input = self.x,
+                                       input = input,
                                        activation = T.nnet.relu)
 
         self.outputLayer = softMaxClassifier(n_in = n_hidden,
                                              n_out = n_out,
-                                             train_x = self.hiddenLayer.output,
-                                             train_y = self.y)
+                                             input = self.hiddenLayer.output)
 
-        self.errors = self.outputLayer.errors
+
+        self.errors = self.outputLayer.zero_one_loss
         self.params = self.hiddenLayer.params + self.outputLayer.params
         self.negativeLogLikelihood = self.outputLayer.negativeLogLikelihood
         self.L1 = abs(self.hiddenLayer.W).sum() + abs(self.outputLayer.W).sum()
         self.L2_sqr = T.sum(self.hiddenLayer.W ** 2) + T.sum(self.outputLayer.W ** 2)
 
-        self.rate = rate
-        self.steps = max_iter_steps
+def train(train_x, train_y, validation_x, validation_y, test_x = None,
+          test_y = None, batch_size = 20, max_iter_times = 1000, rate = 0.1, L1_reg = 0.000, L2_reg = 0.0001):
 
-    def train(self, batch_size = 20, L1_reg = 0.000, L2_reg = 0.0001):
-        n_train_batches = self.train_x.get_value(borrow=True).shape[0] // batch_size
-        n_validation_batches = self.validation_x.get_value(borrow=True).shape[0] // batch_size
-        n_test_batches= self.test_x.get_value(borrow=True).shape[0] // batch_size
+    n_train_batches = train_x.get_value(borrow=True).shape[0] // batch_size
+    n_validation_batches = validation_x.get_value(borrow=True).shape[0] // batch_size
+    n_test_batches= test_x.get_value(borrow=True).shape[0] // batch_size
 
-        print 'building model'
-        start_time = timeit.default_timer()
+    print 'building model'
+    x = T.matrix('x')
+    y = T.ivector('y')
 
-        index = T.lscalar()
+    model = MLP(x, 28*28, 500, 10)
+    start_time = timeit.default_timer()
 
-        cost = self.negativeLogLikelihood(self.y) + L1_reg * self.L1 + L2_reg * self.L2_sqr
+    index = T.lscalar()
 
-        if self.test_x and self.test_y:
-            test_model = function([], self.errors,
-                                  givens={
-                                      self.x: self.test_x,
-                                      self.y: self.test_y
-                                  })
+    cost = model.negativeLogLikelihood(y) + L1_reg * model.L1 + L2_reg * model.L2_sqr
 
-        validation_model = function([index], self.errors,
-                                    givens={
-                                        self.x: self.validation_x[batch_size * index: batch_size * (index + 1)],
-                                        self.y: self.validation_y[batch_size * index: batch_size * (index + 1)]
-                                    })
+    if test_x and test_y:
+        test_model = function([], model.errors(y),
+                              givens={
+                                  x: test_x,
+                                  y: test_y
+                              })
+
+    validation_model = function([index], model.errors(y),
+                                givens={
+                                    x: validation_x[batch_size * index: batch_size * (index + 1)],
+                                    y: validation_y[batch_size * index: batch_size * (index + 1)]
+                                })
 
 
 
-        gparams = [T.grad(cost, param) for param in self.params]
+    #gparams = [T.grad(cost, param) for param in model.params]
+    gparams = T.grad(cost, model.params)
 
-        updates = [(param, param - self.rate * gp)
-                  for param, gp in zip(self.params, gparams)]
+    updates = [(param, param - rate * gp)
+              for param, gp in zip(model.params, gparams)]
 
-        train_model = function([index], cost,
-                               givens={
-                                   self.x: self.train_x[batch_size * index: batch_size * (index + 1)],
-                                   self.y: self.train_y[batch_size * index: batch_size * (index + 1)]
-                               }, updates = updates)
+    train_model = function([index], cost,
+                           givens={
+                               x: train_x[batch_size * index: batch_size * (index + 1)],
+                               y: train_y[batch_size * index: batch_size * (index + 1)]
+                           }, updates = updates)
 
-        print 'training'
+    print 'training'
 
-        patience = 10000
-        patience_increase = 2
+    patience = 10000
+    patience_increase = 2
 
-        improvement_threshold = 0.995
-        validation_frequency = min(n_train_batches, patience // 2)
+    improvement_threshold = 0.995
+    validation_frequency = min(n_train_batches, patience // 2)
 
-        best_validation_loss = np.Inf
-        test_score = 0
-        epoch = 0
-        done_looping = False
-        while epoch < self.steps and not done_looping:
-            epoch += + 1
-            for miniBatch_index in range(n_train_batches):
-                miniBatch_avg_cost = train_model(miniBatch_index)
-                iter = (epoch - 1) * n_train_batches + miniBatch_index
-                if (iter + 1) % validation_frequency == 0:
-                    validation_losses = [validation_model(i) for i in range(n_validation_batches)]
-                    this_validation_loss = np.mean(validation_losses)
-                    print 'epoch %i, minibatch %i/%i, validation error: %f %%' % \
-                          (epoch, miniBatch_index + 1, n_train_batches, this_validation_loss * 100)
+    best_validation_loss = np.Inf
+    test_score = 0
+    epoch = 0
+    done_looping = False
+    while epoch < max_iter_times and not done_looping:
+        epoch += + 1
+        for miniBatch_index in range(n_train_batches):
+            miniBatch_avg_cost = train_model(miniBatch_index)
+            iter = (epoch - 1) * n_train_batches + miniBatch_index
+            if (iter + 1) % validation_frequency == 0:
+                validation_losses = [validation_model(i) for i in range(n_validation_batches)]
+                this_validation_loss = np.mean(validation_losses)
+                print 'epoch %i, minibatch %i/%i, validation error: %f %%' % \
+                      (epoch, miniBatch_index + 1, n_train_batches, this_validation_loss * 100)
 
-                    if this_validation_loss < best_validation_loss:
-                        if this_validation_loss < best_validation_loss * improvement_threshold:
-                            patience = max(patience, iter * patience_increase)
+                if this_validation_loss < best_validation_loss:
+                    if this_validation_loss < best_validation_loss * improvement_threshold:
+                        patience = max(patience, iter * patience_increase)
 
-                        best_validation_loss = this_validation_loss
+                    best_validation_loss = this_validation_loss
 
-                        if self.test_x and self.test_y:
-                            test_score = test_model()
-                            print 'epoch %i, minibatch %i/%i, test error: %f %%' % \
-                                  (epoch, miniBatch_index + 1, n_train_batches, test_score * 100)
+                    if test_x and test_y:
+                        test_score = test_model()
+                        print 'epoch %i, minibatch %i/%i, test error: %f %%' % \
+                              (epoch, miniBatch_index + 1, n_train_batches, test_score * 100)
 
-                if patience <= iter:
-                    done_looping = True
-                    break
+            if patience <= iter:
+                done_looping = True
+                break
 
-        end_time = timeit.default_timer()
-        print 'Optimization complete, best validation score is %f %%' \
-              ' with test performance %f %%' % (best_validation_loss * 100, test_score * 100)
+    end_time = timeit.default_timer()
+    print 'Optimization complete, best validation score is %f %%' \
+          ' with test performance %f %%' % (best_validation_loss * 100, test_score * 100)
 
-        print 'time cost: %.2fm'% ((end_time - start_time) / 60.0, )
+    print 'time cost: %.2fm'% ((end_time - start_time) / 60.0, )
 
 
 if __name__ == '__main__':
     train_set, train_label, validation_set, validation_label, test_set, test_label = load_data()
-    mlp = MLP(28*28, 500, 10, train_set, train_label, validation_set, validation_label, test_set, test_label)
-    mlp.train()
+    train(train_set, train_label, validation_set, validation_label, test_set, test_label)
