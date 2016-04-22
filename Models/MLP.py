@@ -65,6 +65,7 @@ class MLP(object):
         self.errors = self.outputLayer.zero_one_loss
         self.params = self.hiddenLayer.params + self.outputLayer.params
         self.negativeLogLikelihood = self.outputLayer.negativeLogLikelihood
+        self.predict = self.outputLayer.y_predict
         self.L1 = abs(self.hiddenLayer.W).sum() + abs(self.outputLayer.W).sum()
         self.L2_sqr = T.sum(self.hiddenLayer.W ** 2) + T.sum(self.outputLayer.W ** 2)
 

@@ -8,7 +8,7 @@ import numpy as np
 from theano import function
 import matplotlib.pyplot as plt
 
-def load_data(dataSet = '.\\data\\mnist.pkl.gz'):
+def load_data(dataSet = '..\\data\\mnist.pkl.gz'):
     with gzip.open(dataSet, 'rb') as f:
         train_set, valid_set, test_set = pickle.load(f)
 
