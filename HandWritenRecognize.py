@@ -40,17 +40,13 @@ class LeNet(object):
         self.layer_final.outputLayer.b.set_value(layer_final_params[3].get_value(), borrow= True)
         self.predict = theano.function([self.x], self.layer_final.predict)
 
-
-
-
-
-
+       # self.get_feature = theano.function([self.x], self.layer_1.output)
+        #()!@J#()!@J#(J#
 
 if __name__ == '__main__':
     leNet = LeNet((20, 50))
     img = imread('.\\12345.jpg')
     img = 255 - img
-    imshow('wow',img)
     img_gray = cvtColor(img, COLOR_BGR2GRAY)
     img_gray = threshold(img_gray, 50, 255, THRESH_BINARY)[1]
     img_gray = img_gray.astype('float32') / 255.0
@@ -96,7 +92,10 @@ if __name__ == '__main__':
         result[4:24, 4:24] = new_img
         splited_image[i] = result.reshape(1, 28*28)
 
+    result = 0
     for s_img in splited_image:
-        print leNet.predict(s_img)
+        result = result * 10 + leNet.predict(s_img)[0]
+
+    print result
 
 

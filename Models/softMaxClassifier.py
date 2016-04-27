@@ -29,7 +29,7 @@ class softMaxClassifier(object):
         self.rng = np.random
         self.n_in = n_in
         self.n_out = n_out
-        print self.n_in, self.n_out
+        #print self.n_in, self.n_out
         self.W = theano.shared(np.zeros((self.n_in, self.n_out),dtype=theano.config.floatX), borrow = True)
         self.b = theano.shared(np.zeros((self.n_out, ), dtype=theano.config.floatX), borrow = True)
         self.p_y_given_x = T.nnet.softmax(T.dot(input, self.W) + self.b)
