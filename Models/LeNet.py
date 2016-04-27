@@ -2,13 +2,12 @@ from __future__ import division
 from MLP import MLP
 from theano import function
 from theano.tensor.nnet import conv2d
-from theano.tensor.signal import downsample
 from softMaxClassifier import load_data
 import numpy as np
 import theano.tensor as T
 import theano
-import json
 import cPickle as pickle
+import theano.tensor.signal.pool as downsample
 
 class LeNetConvPoolLayer(object):
     def __init__(self, rng, input, layer_shape, input_shape, pool_size = (2,2)):
@@ -34,7 +33,7 @@ class LeNetConvPoolLayer(object):
         self.b = theano.shared(np.zeros(shape = (layer_shape[0], ), dtype = theano.config.floatX), borrow = True)
 
         convolution_out = conv2d(input, self.W, filter_shape = layer_shape, input_shape = input_shape) #what will happen if I delete the last two parameters
-        pool_out = downsample.max_pool_2d(convolution_out, pool_size, ignore_border = True)
+        pool_out = downsample.pool_2d(convolution_out, pool_size, ignore_border = True)
         self.output = T.tanh(pool_out + self.b.dimshuffle('x', 0, 'x', 'x'))
         self.params = [self.W, self.b]
 
