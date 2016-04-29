@@ -13,3 +13,5 @@
 程序输出：
 
 ![image](https://github.com/skillness/DeepLearning/blob/master/data/result.png)
+
+对于某些字体打印在电脑上的数字可以做到100%的识别，至于手写的。。随缘了。
