@@ -1,11 +1,11 @@
 from cv2 import *
-from Models.softMaxClassifier import load_data
 from Models.MLP import MLP
 import numpy as np
 import Models.LeNet as LN
 import theano
 import theano.tensor as T
 import cPickle as pickle
+import sys
 
 class LeNet(object):
     x = T.matrix('x')
@@ -45,8 +45,13 @@ class LeNet(object):
         #()!@J#()!@J#(J#
 
 if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print sys.argv
+        print "usage: HandWritenRecognize.py  img_path"
+        exit()
     leNet = LeNet((20, 50))
-    img = imread('.\\12345.jpg')
+    img = imread(sys.argv[1])
+
     img = 255 - img
     img_gray = cvtColor(img, COLOR_BGR2GRAY)
     img_gray = threshold(img_gray, 50, 255, THRESH_BINARY)[1]
