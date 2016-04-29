@@ -1,4 +1,5 @@
 # DeepLearning
+在学习深度学习中写的一些模型和小玩具。
 ##HandWriteRecognize
 手写识别，可以识别写在一行的数字，效果图如下所示
 
