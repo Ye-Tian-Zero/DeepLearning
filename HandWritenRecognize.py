@@ -39,6 +39,7 @@ class LeNet(object):
         self.layer_final.outputLayer.W.set_value(layer_final_params[2].get_value(), borrow= True)
         self.layer_final.outputLayer.b.set_value(layer_final_params[3].get_value(), borrow= True)
         self.predict = theano.function([self.x], self.layer_final.predict)
+        self.firstConv = theano.function([self.x], self.layer_0.output)
 
        # self.get_feature = theano.function([self.x], self.layer_1.output)
         #()!@J#()!@J#(J#

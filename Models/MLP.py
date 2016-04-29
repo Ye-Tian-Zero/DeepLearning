@@ -51,7 +51,6 @@ class HiddenLayer(object):
 
 class MLP(object):
     def __init__(self, input, n_in, n_hidden, n_out):
-
         self.hiddenLayer = HiddenLayer(n_in = n_in,
                                        n_out = n_hidden,
                                        input = input,
