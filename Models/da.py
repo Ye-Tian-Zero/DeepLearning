@@ -28,12 +28,13 @@ class DA(object):
         self.n_hidden = n_hidden
 
         if W is None:
-            W = shared(np.array(np_rng.uniform(low = -4 * (6.0 / (n_hidden + n_visible)),
-                                               high = 4 * (6.0 / (n_hidden+n_visible)),
+            W = shared(np.array(np_rng.uniform(low = -4 * np.sqrt(6.0 / (n_hidden + n_visible)),
+                                               high = 4 * np.sqrt(6.0 / (n_hidden+n_visible)),
                                                size=(n_visible, n_hidden)),
                                 dtype=theano.config.floatX),
                        name = 'W',
                        borrow=True)
+            #W = shared(np.zeros(shape=(n_visible, n_hidden), dtype=theano.config.floatX))
 
         if b_vis is None:
             b_vis = shared(np.zeros(n_visible, dtype=theano.config.floatX), borrow=True)
@@ -123,7 +124,7 @@ def testDA(batch_size = 20, train_epochs = 200):
             X=da.W.get_value(borrow=True).T,
             img_shape=(28, 28), tile_shape=(10, 10),
             tile_spacing=(1, 1)))
-        image.save('.\\DA_IMG_relu\\filters_corruption_30_epoch_%d.png' % epoch)
+        image.save('.\\DA_IMG_W_0\\filters_corruption_30_epoch_%d.png' % epoch)
 
     end_time = timeit.default_timer()
 
