@@ -5,6 +5,7 @@ import theano
 import theano.tensor as T
 from theano import function
 from softMaxClassifier import load_data, softMaxClassifier
+from theano.tensor.shared_randomstreams import RandomStreams
 
 '''class softMaxClassifier(object):
     def __init__(self, train_x, train_y, n_out, n_in):
@@ -25,7 +26,7 @@ from softMaxClassifier import load_data, softMaxClassifier
         return -T.mean(T.log(self.p_y_given_x)[T.arange(0, y.shape[0]), y])'''
 
 class HiddenLayer(object):
-    def __init__(self, n_in, n_out, input, W = None, b = None, activation = T.tanh):
+    def __init__(self, n_in, n_out, input, W = None, b = None, activation = T.tanh ):
         self.rng = np.random
         self.input = input
         if W is None:

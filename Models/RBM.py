@@ -24,7 +24,7 @@ class RBM(object):
         self.n_hidden = n_hidden
 
         if numpy_rng is None:
-            numpy_rng = np.random.RandomState(123)
+            numpy_rng = np.random.RandomState(274563533)
 
         if theano_rng is None:
             theano_rng = RandomStreams(numpy_rng.randint(2 ** 30))
@@ -156,7 +156,7 @@ def trainRBM(train_epochs = 15, batch_size = 20, learning_rate = 0.1, n_hidden =
     test_set_x, test_set_y = load_data()
     n_train_batches = train_set_x.get_value().shape[0] // batch_size
 
-    index = T.lscalar()
+    index = T.lscalar('index')
     x = T.matrix('x')
     rbm = RBM(x,n_hidden=n_hidden)
 
@@ -292,6 +292,6 @@ def testRBM(pickle_file, n_chains = 20, n_samples = 10):
 
 
 if __name__ == "__main__":
-    #trainRBM()
+    trainRBM(batch_size=10, learning_rate=0.1, train_epochs=20)
     testRBM(".\\RBM_params.pkl", n_samples=20)
 
